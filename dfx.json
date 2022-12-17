@@ -1,0 +1,19 @@
+{
+	"canisters": {
+		"heartbeat_assets": {
+			"dependencies": [],
+			"frontend": {
+				"entrypoint": "build/index.html"
+			},
+			"source": ["build"],
+			"type": "assets"
+		},
+		"health_metrics": {
+			"main": "src/service_health_metrics/HealthMetrics.mo",
+			"type": "motoko",
+			"dependencies": []
+		}
+	},
+	"dfx": "0.12.0",
+	"version": 1
+}
