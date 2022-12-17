@@ -1,7 +1,5 @@
 <script>
-
-import PageNavigation from 'heartbeat-components/components/PageNavigation.svelte';
-
+	import PageNavigation from 'heartbeat-components/components/PageNavigation.svelte';
 </script>
 
 <!-- Explore -->
@@ -10,7 +8,7 @@ import PageNavigation from 'heartbeat-components/components/PageNavigation.svelt
 </svelte:head>
 
 <main class="hidden lg:grid grid-cols-12 gap-y-2 relative">
-    <div>Hello World</div>
+	<PageNavigation />
 </main>
 
 <style>
