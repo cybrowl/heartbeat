@@ -121,15 +121,17 @@
 	{:else}
 		<div class="col-start-2 col-end-12">
 			{#each $fetch_store.logs as log}
-				<CanisterChart
-					title={'Canister Metrics'}
-					name={log.last_elem.name}
-					child_canister_id={log.last_elem.child_canister_id}
-					parent_canister_id={log.last_elem.parent_canister_id}
-					metrics_data={log.metrics_data}
-					meters_data={log.meters_data}
-					cycles_data={log.cycles_data}
-				/>
+				<div class="mb-10">
+					<CanisterChart
+						title={'Canister Metrics'}
+						name={log.last_elem.name}
+						child_canister_id={log.last_elem.child_canister_id}
+						parent_canister_id={log.last_elem.parent_canister_id}
+						metrics_data={log.metrics_data}
+						meters_data={log.meters_data}
+						cycles_data={log.cycles_data}
+					/>
+				</div>
 			{/each}
 		</div>
 	{/if}
