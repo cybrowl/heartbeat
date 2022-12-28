@@ -19,8 +19,6 @@
 
 			const all_logs = await $actor_health_metrics.actor.get_canister_logs(canister_id);
 
-			console.log('all_logs: ', all_logs);
-
 			const canister_logs = all_logs.map((log_data) => {
 				const metrics_data = transform_for_bar_chart(log_data);
 				const meters_data = transform_for_meters(log_data);
