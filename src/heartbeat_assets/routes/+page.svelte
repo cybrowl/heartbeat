@@ -1,105 +1,45 @@
 <script>
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import dayjs from 'dayjs';
 
 	import PageNavigation from 'heartbeat-components/components/PageNavigation.svelte';
-	import CanisterChart from 'heartbeat-components/components/CanisterChart.svelte';
+	import DataGrid from 'heartbeat-components/components/DataGrid.svelte';
 
 	import { actor_health_metrics } from '$stores_ref/actors.js';
-	import { fetch_store } from '$stores_ref/fetch_store.js';
+	import { fetch_store, fetch_store_fetching } from '$stores_ref/fetch_store.js';
+
+	fetch_store_fetching();
 
 	onMount(async () => {
 		try {
-			const all_logs = await $actor_health_metrics.actor.get_logs();
+			const all_logs = await $actor_health_metrics.actor.get_unique_logs();
 
-			const unique_canister_id_logs = [...new Set(all_logs.map((log) => log.child_canister_id))];
+			const converted_logs = all_logs.map((log) => {
+				const date_converted = dayjs(Number(log.time) / 1000000).toISOString();
 
-			const filteredLogs = unique_canister_id_logs.map((id) =>
-				all_logs.filter((log) => log.child_canister_id === id)
-			);
-
-			const canister_logs = filteredLogs.map((log_data) => {
-				const metrics_data = transform_for_bar_chart(log_data);
-				const meters_data = transform_for_meters(log_data);
-				const cycles_data = get_cycles_metric(log_data);
-				const last_elem = get_last_elem(log_data);
-
-				const canister_log = {
-					metrics_data,
-					meters_data,
-					cycles_data,
-					last_elem
+				const converted_log = {
+					...log,
+					time: dayjs(date_converted).format('YYYY-MM-DD HH:mm:ss')
 				};
 
-				return canister_log;
+				return converted_log;
 			});
 
-			fetch_store.set({ isFetching: false, logs: canister_logs });
+			fetch_store.set({ isFetching: false, logs: converted_logs });
 		} catch (error) {
 			console.error('error: call', error);
 		}
 	});
 
-	function transform_for_bar_chart(metrics_data) {
-		function convert_timestamp_to_date(timestamp) {
-			const dt = dayjs(Number(timestamp) / 1000000).toISOString();
-			return dt;
+	async function handleItemClick(e) {
+		const { column, row } = e.detail;
+
+		if (column === 'id') {
+			const canister_id = row.id;
+
+			goto(`/canister/${canister_id}`);
 		}
-
-		let metrics_converted = metrics_data.map((metric) => {
-			let all_metrics = [];
-
-			// loop over metric.metrics
-			for (const [key, value] of metric.metrics) {
-				// explore key cycles_balance
-				if (key !== 'cycles_balance') {
-					all_metrics.push({
-						group: key,
-						date: convert_timestamp_to_date(metric.time),
-						value: Number(value)
-					});
-				}
-			}
-
-			return all_metrics;
-		});
-
-		return metrics_converted.flat();
-	}
-
-	function transform_for_meters(metrics_data) {
-		let all_metrics = [];
-
-		const last_elem = metrics_data[metrics_data.length - 1];
-
-		for (const [key, value] of last_elem.metrics) {
-			if (key == 'memory_in_mb' || key == 'heap_in_mb') {
-				all_metrics.push({
-					group: key,
-					value: Number(value)
-				});
-			}
-		}
-
-		return all_metrics;
-	}
-
-	function get_cycles_metric(metrics_data) {
-		const last_elem = metrics_data[metrics_data.length - 1];
-
-		for (const [key, value] of last_elem.metrics) {
-			if (key == 'cycles_balance') {
-				return {
-					group: key,
-					value: Number(value)
-				};
-			}
-		}
-	}
-
-	function get_last_elem(metrics_data) {
-		const last_elem = metrics_data[metrics_data.length - 1];
-		return last_elem;
 	}
 </script>
 
@@ -120,19 +60,13 @@
 		</div>
 	{:else}
 		<div class="col-start-2 col-end-12">
-			{#each $fetch_store.logs as log}
-				<div class="mb-10">
-					<CanisterChart
-						title={'Canister Metrics'}
-						name={log.last_elem.name}
-						child_canister_id={log.last_elem.child_canister_id}
-						parent_canister_id={log.last_elem.parent_canister_id}
-						metrics_data={log.metrics_data}
-						meters_data={log.meters_data}
-						cycles_data={log.cycles_data}
-					/>
-				</div>
-			{/each}
+			<div class="mb-10">
+				<DataGrid
+					data={$fetch_store.logs}
+					on:itemClick={handleItemClick}
+					columns={['id', 'time', 'name', 'cycles_balance', 'memory_in_mb', 'heap_in_mb']}
+				/>
+			</div>
 		</div>
 	{/if}
 </main>
